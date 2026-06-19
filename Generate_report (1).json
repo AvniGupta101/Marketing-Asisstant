@@ -1,0 +1,601 @@
+{
+  "name": "Generate_report",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "folder",
+        "folderId": "4B67B7028C4F1B24!s0f198e6e69f54c20aad627a8697cd7c8"
+      },
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1.1,
+      "position": [
+        -2320,
+        -32
+      ],
+      "id": "e4e64b24-c820-4489-9e62-f181711c4a8f",
+      "name": "Get items in a folder",
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "3VUbnalYEjFZjC5M",
+          "name": "Microsoft Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7d2e9ea1-0244-4f00-ac4b-789d10632cfd",
+              "leftValue": "={{ $json.createdDateTime }}",
+              "rightValue": "={{ $now.minus({ days: 1 }).toISO() }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "afterOrEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        -2112,
+        -32
+      ],
+      "id": "49d5b3b9-e086-4077-9c1f-0031c58631b5",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1.1,
+      "position": [
+        -1888,
+        -32
+      ],
+      "id": "c8aa968b-1b0a-4455-9eb5-51367ae13d75",
+      "name": "Download a file",
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "3VUbnalYEjFZjC5M",
+          "name": "Microsoft Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1648,
+        -32
+      ],
+      "id": "b8c03f95-c183-4601-a47e-7f2740a24db4",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Marketing Decision Support Assistant.\n\nYou will receive:\n\n1. Aggregated anonymized marketing performance data.\n2. Historical product performance data (may be null).\n\nCURRENT DATA:\n\n{{ JSON.stringify($json.summarized_products) }}\n\nHISTORICAL MEMORY:\n\n{{ JSON.stringify($json.historicalMemory || null) }}\n\nIMPORTANT:\n\nThe product identifiers (e.g. Product_1, Product_2) are anonymized placeholders.\n\nDo not attempt to infer real product names.\n\nUse the identifiers exactly as provided.\n\nRULES:\nHistorical memory contains:\n- Previous top performers\n- Previous worst performers\n- Previous alerts\n- Previous recommendations\n\nIt does NOT contain historical metrics.\n\nUse it to identify repeated issues and recurring performers.\nDo not claim that historical data is unavailable if historicalMemory contains records.\n1. If historicalMemory is null, empty, or unavailable:\n\n   * Analyze only the current performance data.\n   * Do not mention missing historical data.\n   * Do not mention inability to compare.\n   * Produce a complete business analysis using current metrics only.\n\n2. If historicalMemory exists:\n\n   * Compare current performance against historical patterns.\n   * Identify:\n\n     * Repeated issues\n     * Improving trends\n     * Worsening trends\n     * New anomalies\n     * Emerging opportunities\n\n3. Always identify:\n\n   * Top performer\n   * Worst performer\n   * Major risks\n   * Key opportunities\n   * Optimization recommendations\n\n4. Focus on:\n\n   * Spend efficiency\n   * CTR performance\n   * Product performance distribution\n   * Budget allocation opportunities\n   * Potential waste\n\n5. Recommendations must be actionable and business-focused.\n\n6. Keep the entire response concise and under 400 words.\n\nOUTPUT FORMAT:\n\nReturn ONLY valid HTML.\n\nRequired Sections:\n\n1. Executive Summary\n2. Performance Highlights\n3. Risks & Alerts\n4. Trend Analysis (only if historicalMemory exists)\n5. Optimization Recommendations\n\nUse:\n\n* <h2> headings\n* <ul> and <li> bullet lists\n* concise business language\n* no markdown\n* no tables\n* no code blocks\n\nFor critical alerts use:\n\n<div style=\"background:#ffe5e5;padding:12px;border-left:5px solid #d9534f;\">\nAlert message\n</div>\n\nFor warnings use:\n\n<div style=\"background:#fff8dc;padding:12px;border-left:5px solid #f0ad4e;\">\nWarning message\n</div>\n\nAfter the HTML report append EXACTLY:\n\n===MEMORY===\n\nTOP_PERFORMER: [Product_X]\n\nWORST_PERFORMER: [Product_X]\n\nRECOMMENDATION: [single most important recommendation]\n\nALERT: [most critical alert]\n\nTREND: [most important trend or NONE]\n\nANOMALY: [most significant anomaly or NONE]\n\nMEMORY RULES:\n\n* Return exactly one value for each field.\n* Use Product_X identifiers exactly as provided.\n* Keep each memory value under 25 words.\n* Do not add extra fields.\n* Do not include explanations after the MEMORY section.\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -688,
+        -32
+      ],
+      "id": "21b3e3a0-f07a-4021-aaff-435915c06fb9",
+      "name": "AI Agent",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "sendTo": "avngupta06@gmail.com",
+        "subject": "=Daily Amazon Performance Analysis - {{ $now.format('MMMM dd, yyyy') }}",
+        "message": "={{ $json.styledEmailHtml }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        400,
+        -256
+      ],
+      "id": "0861caef-8f96-49b7-8fb2-4f7032534cc3",
+      "name": "Send a message",
+      "webhookId": "c2d24415-5560-4f9b-b367-d09ea521f436",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "wKILtnfo1DBY7gtz",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const aiAnalysisText = items[0].json.output;\n\nconst spendPieChartUrl = items[0].json.spendPieChartUrl;\nconst clicksBarChartUrl = items[0].json.clicksBarChartUrl;\n\nconst currentDate = new Date().toLocaleDateString('en-US', {\n  year: 'numeric',\n  month: 'long',\n  day: 'numeric'\n});\n\nconst emailHtmlBody = `\n<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n\n<style>\n\nbody{\n    margin:0;\n    padding:30px;\n    background:#f4f6f9;\n    font-family:Arial, Helvetica, sans-serif;\n}\n\n.container{\n    max-width:900px;\n    margin:auto;\n    background:#ffffff;\n    border:1px solid #d9e2ec;\n}\n\n.header{\n    background:#0f172a;\n    color:white;\n    padding:30px 40px;\n}\n\n.header h1{\n    margin:0;\n    font-size:26px;\n}\n\n.header p{\n    margin-top:8px;\n    color:#cbd5e1;\n    font-size:13px;\n}\n\n.report-meta{\n    padding:20px 40px;\n    background:#f8fafc;\n    border-bottom:1px solid #e2e8f0;\n}\n\n.kpi-section{\n    padding:30px 40px 10px 40px;\n}\n\n.section-title{\n    font-size:18px;\n    font-weight:700;\n    color:#0f172a;\n    margin-bottom:15px;\n}\n\n.chart-container{\n    padding:20px 40px;\n}\n\n.chart-card{\n    border:1px solid #e2e8f0;\n    border-radius:8px;\n    padding:15px;\n    margin-bottom:25px;\n    background:#ffffff;\n}\n\n.chart-card h3{\n    margin-top:0;\n    color:#334155;\n}\n\n.chart-card img{\n    width:100%;\n    max-width:750px;\n}\n\n.analysis-section{\n    padding:20px 40px 40px 40px;\n}\n\n.analysis-content{\n    color:#334155;\n    line-height:1.7;\n    font-size:14px;\n}\n\n.analysis-content h2{\n    color:#0f172a;\n    border-bottom:1px solid #e2e8f0;\n    padding-bottom:8px;\n}\n\n.footer{\n    border-top:1px solid #e2e8f0;\n    padding:20px 40px;\n    background:#fafafa;\n    color:#64748b;\n    font-size:12px;\n}\n\n</style>\n</head>\n\n<body>\n\n<div class=\"container\">\n\n    <div class=\"header\">\n        <h1>Marketing Decision Support Assistant</h1>\n        <p>Daily Campaign Intelligence Report</p>\n    </div>\n\n    <div class=\"report-meta\">\n        <strong>Report Date:</strong> ${currentDate}\n    </div>\n\n    <div class=\"kpi-section\">\n        <div class=\"section-title\">\n            Performance Dashboard\n        </div>\n    </div>\n\n    <div class=\"chart-container\">\n\n       \n\n    <div class=\"analysis-section\">\n\n        <div class=\"section-title\">\n            AI Analysis & Recommendations\n        </div>\n\n        <div class=\"analysis-content\">\n            ${aiAnalysisText}\n        </div>\n\n    </div>\n\n    <div class=\"footer\">\n        <strong>Confidential Internal Report</strong><br>\n        Generated automatically via Marketing Decision Support Assistant<br>\n        Powered by n8n • Neon PostgreSQL • AI Analytics Engine\n    </div>\n\n</div>\n\n</body>\n</html>\n`;\n\nreturn [{\n    json: {\n        styledEmailHtml: emailHtmlBody\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        -256
+      ],
+      "id": "7d88a459-e2a7-4fdf-a533-4502b04de4c7",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -768,
+        192
+      ],
+      "id": "ace3985d-0567-47c8-b214-75b8e77de499",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "k8KWC8TTQnf1wI6J",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $json.output;\n\nconst topPerformer =\n  text.match(/TOP_PERFORMER:\\s*(.*)/)?.[1]?.trim() || \"\";\n\nconst worstPerformer =\n  text.match(/WORST_PERFORMER:\\s*(.*)/)?.[1]?.trim() || \"\";\n\nconst recommendation =\n  text.match(/RECOMMENDATION:\\s*(.*)/)?.[1]?.trim() || \"\";\n\nconst alert =\n  text.match(/ALERT:\\s*(.*)/)?.[1]?.trim() || \"\";\n\nconst today = new Date().toISOString().split(\"T\")[0];\n\nreturn [\n  {\n    json: {\n      memory_date: today,\n      memory_type: \"top_performer\",\n      content: topPerformer\n    }\n  },\n  {\n    json: {\n      memory_date: today,\n      memory_type: \"worst_performer\",\n      content: worstPerformer\n    }\n  },\n  {\n    json: {\n      memory_date: today,\n      memory_type: \"recommendation\",\n      content: recommendation\n    }\n  },\n  {\n    json: {\n      memory_date: today,\n      memory_type: \"alert\",\n      content: alert\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -96,
+        -32
+      ],
+      "id": "71617b0f-2eb8-4c1e-a27b-6dc24ba5ceef",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "agent_memory",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "memory_date": "={{ $json.memory_date }}",
+            "memory_type": "={{ $json.memory_type }}",
+            "content": "={{ $json.content }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "memory_date",
+              "displayName": "memory_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "memory_type",
+              "displayName": "memory_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "content",
+              "displayName": "content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        256,
+        -32
+      ],
+      "id": "c2431138-c667-491b-8cbc-f5215d77f285",
+      "name": "Insert rows in a table1",
+      "credentials": {
+        "postgres": {
+          "id": "ePVYLHAsHnGtyEhw",
+          "name": "Postgres account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM agent_memory\nORDER BY created_at DESC\nLIMIT 30;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1536,
+        272
+      ],
+      "id": "ec62909b-694b-4634-8007-b42f961b03c5",
+      "name": "Execute a SQL query1",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "ePVYLHAsHnGtyEhw",
+          "name": "Postgres account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nif (!items || items.length === 0) {\n  return [{\n    json: {\n      historicalMemory: null\n    }\n  }];\n}\n\nconst historicalMemory = items\n  .filter(item => item.json.memory_type)\n  .map(item => ({\n    type: item.json.memory_type,\n    content: item.json.content,\n    date: item.json.memory_date\n  }));\n\nreturn [{\n  json: {\n    historicalMemory: historicalMemory.length > 0\n      ? historicalMemory\n      : null\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1344,
+        336
+      ],
+      "id": "1b7f2e00-0710-4c83-a45e-55103200d1e3",
+      "name": "Code in JavaScript4",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst productMap = new Map();\nconst aggregated = {};\n\nlet productCounter = 1;\n\n// Aggregate by SAG\nfor (const item of items) {\n\n    const row = item.json;\n\n    const sag = String(row.SAG || \"Unknown Product\");\n\n    if (!aggregated[sag]) {\n        aggregated[sag] = {\n            impressions: 0,\n            clicks: 0,\n            spend: 0,\n            campaigns: new Set()\n        };\n    }\n\n    aggregated[sag].impressions += Number(row.impressions || 0);\n    aggregated[sag].clicks += Number(row.clicks || 0);\n    aggregated[sag].spend += Number(row.spend || 0);\n\n    if (row.campaign_name) {\n        aggregated[sag].campaigns.add(row.campaign_name);\n    }\n}\n\n// Create anonymized output\nconst summarizedProducts = [];\n\nfor (const sag in aggregated) {\n\n    if (!productMap.has(sag)) {\n        productMap.set(\n            sag,\n            `Product_${productCounter++}`\n        );\n    }\n\n    const productId = productMap.get(sag);\n\n    const impressions = aggregated[sag].impressions;\n    const clicks = aggregated[sag].clicks;\n    const spend = aggregated[sag].spend;\n\n    summarizedProducts.push({\n        product: productId,\n        impressions,\n        clicks,\n        spend,\n        ctr:\n            impressions > 0\n                ? Number(((clicks / impressions) * 100).toFixed(2))\n                : 0,\n        campaign_count:\n            aggregated[sag].campaigns.size\n    });\n}\n\n// Reverse mapping\nconst productMapping = {};\n\nfor (const [original, masked] of productMap.entries()) {\n    productMapping[masked] = original;\n}\n\nreturn [{\n    json: {\n        summarized_products: summarizedProducts,\n        product_mapping: productMapping\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1200,
+        -224
+      ],
+      "id": "96385a2f-f6c3-4585-9323-2a824142d127",
+      "name": "anonimization code"
+    },
+    {
+      "parameters": {
+        "jsCode": "// AI response\nlet report = $input.first().json.output;\n\n// Pull mapping from anonymization node\nconst mapping =\n$('anonimization code').first().json.product_mapping;\n\n// Replace Product_X with original names\nfor (const [masked, original] of Object.entries(mapping)) {\n    report = report.replaceAll(masked, original);\n}\n\nreturn [{\n    json: {\n        output: report\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        -32
+      ],
+      "id": "efccb96a-ab13-4725-92e2-1f8ee1e4a6ba",
+      "name": "Re-mapping"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -880,
+        -32
+      ],
+      "id": "a0aa857c-e452-4d9e-9ef8-433cc553abd4",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "4dce97b2-e611-4e93-a95b-412514fdcddf",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -2528,
+        -32
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        608,
+        -96
+      ],
+      "id": "2b030b6e-7264-474b-9015-f940ee446fcb",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"status\": \"success\",\n  \"message\": \"Today's report was generated and emailed successfully.\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        -208
+      ],
+      "id": "0c7f1f4e-6b9e-4f70-8e16-818fa4980717",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get items in a folder": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Download a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download a file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "anonimization code",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Re-mapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "anonimization code": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Re-mapping": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get items in a folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b6a16a77-1ef8-4066-a967-1d4270da9224",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e5ae9407efd54ed20b1d4f6778c1b4169712537d61052754affac6117af586dd"
+  },
+  "nodeGroups": [],
+  "id": "583AtaVcSqlcViDS",
+  "tags": []
+}

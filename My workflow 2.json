@@ -1,0 +1,247 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "marketing-chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -16,
+        -48
+      ],
+      "id": "0630dcd1-7161-48e0-a8ac-0b62aa3b3ac2",
+      "name": "Webhook",
+      "webhookId": "df0c3328-59bd-4b3d-87cf-7856e1fd2ca3",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Marketing Decision Support Assistant.\n\nUser Question:\n{{ $json.body.message }}\n\n\nAnswer the user's question professionally.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        192,
+        -48
+      ],
+      "id": "2a16c6ac-acf4-4ae5-922e-a843e5d6ff01",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  answer: $json.output\n}) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        560,
+        -48
+      ],
+      "id": "a4bf90d8-480b-4c47-8509-2040ba8c3bb8",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3-32b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        64,
+        160
+      ],
+      "id": "bd479941-0d0a-468c-b0d6-7231870d5b16",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "k8KWC8TTQnf1wI6J",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Generate and email today's marketing performance report.\n\nUse this tool when the user asks:\n- Generate today's report\n- Send today's report\n- Run daily analysis\n- Analyze today's marketing data\n- Create a campaign performance report\n- Email the report\n\nThis tool automatically:\n1. Retrieves today's report from OneDrive.\n2. Processes and analyzes campaign performance.\n3. Stores historical memory.\n4. Generates recommendations and alerts.\n5. Sends the final report via email.\n\nThe user does not need to provide any report file manually.",
+        "workflowId": {
+          "__rl": true,
+          "value": "583AtaVcSqlcViDS",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/583AtaVcSqlcViDS",
+          "cachedResultName": "Generate_report"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            },
+            {
+              "id": "filename",
+              "displayName": "filename",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        352,
+        160
+      ],
+      "id": "dc2fdde4-2d8d-4447-a3d3-0f70295857c9",
+      "name": "Call 'Generate_report'"
+    },
+    {
+      "parameters": {
+        "description": "Retrieve historical marketing report data from OneDrive.\n\nUse this tool when the user asks about:\n\n* Historical campaign performance\n* Previous reports\n* Data from a specific report file\n* Performance on a specific date\n* Product metrics from a historical report\n* Historical spend, clicks, impressions, CTR, conversions, CPA, or ROAS\n* Comparisons between current and historical performance\n* Trend analysis across reports\n\nThe tool can retrieve report data based on:\n\n* filename\n* report date\n* product identifier\n* campaign name\n\nExamples:\n\n* Compare today's report with amazon2.csv\n* Show Product_4 performance from amazon1.csv\n* Retrieve data from June 15 report\n* What was the CTR in amazon2.csv?\n* Compare Product_2 across historical reports\n\nReturn only the relevant historical data needed to answer the user's request.\n",
+        "workflowId": {
+          "__rl": true,
+          "value": "TcktpB9KTH0VXbmu",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/TcktpB9KTH0VXbmu",
+          "cachedResultName": "Get_Historical_Report"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('date', ``, 'string') }}",
+            "filename": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('filename', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "filename",
+              "displayName": "filename",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        624,
+        144
+      ],
+      "id": "844d8e77-320d-41ac-a3f7-df9a58951f10",
+      "name": "Call 'Get_Historical_Report'"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Generate_report'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Get_Historical_Report'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "282e29e7-af34-4c07-b46b-ce0984600549",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e5ae9407efd54ed20b1d4f6778c1b4169712537d61052754affac6117af586dd"
+  },
+  "nodeGroups": [],
+  "id": "FCt0OMkxJufEwb13",
+  "tags": []
+}
