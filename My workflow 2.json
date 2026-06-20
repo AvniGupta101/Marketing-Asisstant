@@ -122,25 +122,25 @@
     },
     {
       "parameters": {
-        "description": "Retrieve historical marketing report data from OneDrive.\n\nUse this tool when the user asks about:\n\n* Historical campaign performance\n* Previous reports\n* Data from a specific report file\n* Performance on a specific date\n* Product metrics from a historical report\n* Historical spend, clicks, impressions, CTR, conversions, CPA, or ROAS\n* Comparisons between current and historical performance\n* Trend analysis across reports\n\nThe tool can retrieve report data based on:\n\n* filename\n* report date\n* product identifier\n* campaign name\n\nExamples:\n\n* Compare today's report with amazon2.csv\n* Show Product_4 performance from amazon1.csv\n* Retrieve data from June 15 report\n* What was the CTR in amazon2.csv?\n* Compare Product_2 across historical reports\n\nReturn only the relevant historical data needed to answer the user's request.\n",
+        "description": "Historical Report Analysis Tool\n\nUse this tool whenever the user asks questions about a specific report stored in OneDrive.\n\nThis tool retrieves the requested report, analyzes its contents, and answers the user's question using the report data.\n\nRequired Inputs:\n\n* report_name: Exact report filename without the extension.\n* question: User's question about the report.\n\nExamples:\n\n* Analyze PlacementReport_FebtoMay\n* What are the key trends in PlacementReport_MartoJun?\n* Which category performed best in PlacementReport_FebtoMay?\n* Summarize PlacementReport_MartoApril\n* What improvements were observed in PlacementReport_MartoJun?\n\nAlways use this tool when:\n\n* A report name is mentioned.\n* The user wants analysis of a previous report.\n* The user asks about trends, growth, decline, top performers, comparisons, recommendations, or insights from a specific report.\n\nPass both the exact report name and the user's question to the tool.\n",
         "workflowId": {
           "__rl": true,
-          "value": "TcktpB9KTH0VXbmu",
+          "value": "QmjXt4Rxfe45z3VC",
           "mode": "list",
-          "cachedResultUrl": "/workflow/TcktpB9KTH0VXbmu",
-          "cachedResultName": "Get_Historical_Report"
+          "cachedResultUrl": "/workflow/QmjXt4Rxfe45z3VC",
+          "cachedResultName": "Historical Report Analysis"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('date', ``, 'string') }}",
-            "filename": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('filename', ``, 'string') }}"
+            "report_name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('report_name', `its the report name like PlacementReport_FebtoMay for example`, 'string') }}",
+            "question": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('question', `The main question the user asks`, 'string') }}"
           },
           "matchingColumns": [],
           "schema": [
             {
-              "id": "date",
-              "displayName": "date",
+              "id": "report_name",
+              "displayName": "report_name",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -149,8 +149,8 @@
               "removed": false
             },
             {
-              "id": "filename",
-              "displayName": "filename",
+              "id": "question",
+              "displayName": "question",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -166,11 +166,11 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [
-        624,
-        144
+        496,
+        160
       ],
-      "id": "844d8e77-320d-41ac-a3f7-df9a58951f10",
-      "name": "Call 'Get_Historical_Report'"
+      "id": "64177ba5-425e-4dd2-8d61-c487a101fcb2",
+      "name": "Call 'Historical Report Analysis'"
     }
   ],
   "pinData": {},
@@ -219,7 +219,7 @@
         ]
       ]
     },
-    "Call 'Get_Historical_Report'": {
+    "Call 'Historical Report Analysis'": {
       "ai_tool": [
         [
           {
@@ -236,7 +236,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "282e29e7-af34-4c07-b46b-ce0984600549",
+  "versionId": "98888bea-42b8-474b-9b57-3d9a19c4221a",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "e5ae9407efd54ed20b1d4f6778c1b4169712537d61052754affac6117af586dd"
