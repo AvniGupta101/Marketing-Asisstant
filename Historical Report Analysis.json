@@ -1,0 +1,281 @@
+{
+  "name": "Historical Report Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "report_name"
+            },
+            {
+              "name": "question"
+            }
+          ]
+        }
+      },
+      "id": "381485e1-5a72-4ffc-8bec-270d824a9dbd",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -576,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "folderId": "4B67B7028C4F1B24!s0f198e6e69f54c20aad627a8697cd7c8"
+      },
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1.1,
+      "position": [
+        -128,
+        0
+      ],
+      "id": "62f7ac79-2ff2-49a9-8342-7d265e4d3628",
+      "name": "Get items in a folder",
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "3VUbnalYEjFZjC5M",
+          "name": "Microsoft Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7d2e9ea1-0244-4f00-ac4b-789d10632cfd",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": "={{ $('When Executed by Another Workflow').first().json.report_name }}",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        80,
+        0
+      ],
+      "id": "e7615cde-dd8a-42a1-a7fd-07544000720a",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        0
+      ],
+      "id": "392c5523-92e7-49f1-90a0-4c4614efe18a",
+      "name": "Download a file",
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "3VUbnalYEjFZjC5M",
+          "name": "Microsoft Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        496,
+        0
+      ],
+      "id": "20926e73-2a9b-401d-bfa7-c86461ae2434",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(item => item.json);\n\nreturn [{\n  json: {\n    reportData: rows,\n    question: $('When Executed by Another Workflow').first().json.question,\n    report_name: $('When Executed by Another Workflow').first().json.report_name\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "id": "1780140d-b471-4937-b62c-8be9628a92f5",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a historical report analysis assistant.\n\nYou are provided with:\n\n1. report data\n2. The user's question.\n\nAnalyze the report and answer the user's question.\n\nYou may:\n- Identify trends\n- Compare values\n- Find top performers\n- Find poor performers\n- Summarize findings\n- Explain improvements or declines\n\nUse only information present in the report. {{ $json.reportData }} {{ $json.question }}{{ $json.report_name }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        928,
+        0
+      ],
+      "id": "441be296-3c80-4fd5-a485-2088cc095995",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3.6-27b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        800,
+        208
+      ],
+      "id": "167e3f2b-339f-4569-90a6-d2d6277d8122",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "k8KWC8TTQnf1wI6J",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"answer\":\"{{$json.output}}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1296,
+        0
+      ],
+      "id": "7a6f387a-6d1e-4c83-8580-bc9aa8578751",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get items in a folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get items in a folder": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Download a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download a file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7574239f-910e-42af-868b-0c85a78c986f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e5ae9407efd54ed20b1d4f6778c1b4169712537d61052754affac6117af586dd"
+  },
+  "nodeGroups": [],
+  "id": "QmjXt4Rxfe45z3VC",
+  "tags": []
+}
